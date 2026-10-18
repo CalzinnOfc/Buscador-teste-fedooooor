@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Motor de Busca Privado</title>
+<style>
+:root{--bg:#fff;--fg:#1d1d1f;--mut:#6b6b76;--acc:#fb542b;--card:#f4f4f7;--line:#e2e2e8}
+@media(prefers-color-scheme:dark){:root{--bg:#16161a;--fg:#ececf1;--mut:#9a9aa8;--card:#232329;--line:#33333b}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg)}
+main{max-width:720px;margin:0 auto;padding:0 16px 48px;transition:padding .3s}
+main.home{padding-top:28vh}
+h1{font-size:2.2rem;text-align:center;margin:0 0 24px;letter-spacing:-.5px}
+h1 span{color:var(--acc)}
+main:not(.home) h1{display:none}
+main:not(.home){padding-top:20px}
+form{display:flex;gap:8px}
+input{flex:1;min-width:0;padding:14px 20px;font-size:1rem;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--fg);outline:none}
+input:focus{border-color:var(--acc)}
+button{padding:0 22px;border:0;border-radius:999px;background:var(--acc);color:#fff;font-size:1rem;cursor:pointer}
+#meta{color:var(--mut);font-size:.85rem;margin:18px 4px 6px}
+.r{padding:14px 4px}
+.r a.t{font-size:1.1rem;color:var(--acc);text-decoration:none;word-break:break-word}
+.r a.t:hover{text-decoration:underline}
+.u{color:var(--mut);font-size:.8rem;margin:2px 0;word-break:break-all}
+.s{font-size:.92rem;line-height:1.45}
+#more{display:block;margin:20px auto;background:var(--card);color:var(--fg);padding:10px 24px;height:auto}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<main class="home" id="app">
+  <h1>Busca <span>Privada</span></h1>
+  <form id="f" autocomplete="off">
+    <input id="q" type="search" placeholder="Pesquisar na web…" maxlength="200" autofocus>
+    <button type="submit">Buscar</button>
+  </form>
+  <div id="meta"></div>
+  <div id="res"></div>
+  <button id="more" class="hide" type="button">Mais resultados</button>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let query = "", page = 1;
+
+async function run(append) {
+  const r = await fetch(`/api/search?q=${encodeURIComponent(query)}&page=${page}`, {
+    credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store"
+  });
+  if (!r.ok) { $("meta").textContent = "Erro ao buscar."; return; }
+  const d = await r.json();
+  $("app").classList.remove("home");
+  if (!append) $("res").textContent = "";
+  $("meta").textContent = d.total ? `${d.total} resultado(s)` : "Nenhum resultado encontrado.";
+  for (const x of d.results) {
+    const div = document.createElement("div"); div.className = "r";
+    const a = document.createElement("a");
+    a.className = "t"; a.href = x.url; a.textContent = x.title;
+    a.rel = "noopener noreferrer nofollow";
+    const u = document.createElement("div"); u.className = "u"; u.textContent = x.url;
+    const s = document.createElement("div"); s.className = "s"; s.textContent = x.snippet;
+    div.append(a, u, s); $("res").append(div);
+  }
+  $("more").classList.toggle("hide", page * 10 >= d.total);
+}
+
+$("f").addEventListener("submit", e => {
+  e.preventDefault();
+  query = $("q").value.trim();
+  if (!query) return;
+  page = 1; run(false);
+});
+$("more").addEventListener("click", () => { page++; run(true); });
+</script>
+</body>
+</html>

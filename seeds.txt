@@ -1,0 +1,3 @@
+# Uma URL por linha
+https://en.wikipedia.org/wiki/Web_crawler
+https://pt.wikipedia.org/wiki/Motor_de_busca
